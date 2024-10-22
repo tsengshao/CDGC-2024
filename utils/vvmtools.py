@@ -34,15 +34,25 @@ class newVVMtools(VVMTools):
         return tke
 
     def cal_enstrophy(self, t, func_config):
-        eta  = np.squeeze(self.get_var('eta_2', t, drange, numpy=True, domain_range=func_config["domain_range"]) )
-        zeta = np.squeeze(self.get_var('zeta',  t, drange, numpy=True, domain_range=func_config["domain_range"]) )
-        xi   = np.squeeze(self.get_var('xi',    t, drange, numpy=True, domain_range=func_config["domain_range"]) )
+        eta  = np.squeeze(self.get_var('eta_2', t, numpy=True, \
+                                       domain_range=func_config["domain_range"]),\
+                                      )
+        zeta = np.squeeze(self.get_var('zeta',  t, numpy=True, \
+                                       domain_range=func_config["domain_range"]),\
+                                      )
+        xi   = np.squeeze(self.get_var('xi',    t, numpy=True, \
+                                       domain_range=func_config["domain_range"]),\
+                                      )
         enstrophy = np.nanmean(eta**2 + zeta**2 + xi**2, axis=(1,2))
         return enstrophy
 
     def cal_wpthpbar(self, t, func_config):
-        w  = np.squeeze(self.get_var('w',   t, drange, numpy=True, domain_range=func_config["domain_range"]) )
-        th = np.squeeze(self.get_var('th',  t, drange, numpy=True, domain_range=func_config["domain_range"]) )
+        w  = np.squeeze(self.get_var('w',   t, numpy=True,\
+                                       domain_range=func_config["domain_range"]),\
+                                      )
+        th = np.squeeze(self.get_var('th',  t, numpy=True,\
+                                       domain_range=func_config["domain_range"]),\
+                                      )
         w[1:, :, :] = (w[1:, :, :] + w[:-1, :, :]) / 2
         w[0, :, :] = 0.0
         w_bar    = np.nanmean(w,  axis=(1,2), keep_dims=True)
@@ -68,7 +78,7 @@ class newVVMtools(VVMTools):
                 compute_mean=True, \
                 axis=(1,2),\
                ))
-        del_th  = np.gradient(th, x=self.DIM['zc'], axis=0)
+        del_th  = np.gradient(th, self.DIM['zc'], axis=0)
         max_idx = np.nanargmax(del_th,axis=0)
         return self.DIM['zc'][max_idx]
 
