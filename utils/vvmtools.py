@@ -23,21 +23,14 @@ class newVVMtools(VVMTools):
              domain_range = (0,self.nz,0,self.ny,0,self.nx)
         return domain_range
 
-    def cal_TKE_aaron(self, t, func_config):
-        u = np.squeeze(mytools.get_var("u", t, numpy=True, domain_range=func_config["domain_range"]) )
-        v = np.squeeze(mytools.get_var("v", t, numpy=True, domain_range=func_config["domain_range"]) )
-        w = np.squeeze(mytools.get_var("w", t, numpy=True, domain_range=func_config["domain_range"]) )
-        u_inter = (u[:, :, 1:] + u[:, :, :-1])[1:, 1:] / 2
-        v_inter = (v[:, 1:] + v[:, :-1])[1:, :, 1:] / 2
-        w_inter = (w[1:] + w[:-1])[:, 1:, 1:] / 2
-        TKE = np.mean(u_inter ** 2 + v_inter ** 2 + w_inter ** 2, axis=(1, 2))
-        return TKE
-
     def cal_TKE(self, t, func_config):
         u = np.squeeze(self.get_var('u', t, numpy=True, domain_range=func_config["domain_range"]) )
         v = np.squeeze(self.get_var('v', t, numpy=True, domain_range=func_config["domain_range"]) )
         w = np.squeeze(self.get_var('w', t, numpy=True, domain_range=func_config["domain_range"]) )
-        tke = np.nanmean(u**2 + v**2 + w**2, axis=(1,2))
+        u_inter = (u[:, :, 1:] + u[:, :, :-1])[1:, 1:] / 2
+        v_inter = (v[:, 1:] + v[:, :-1])[1:, :, 1:] / 2
+        w_inter = (w[1:] + w[:-1])[:, 1:, 1:] / 2
+        tke = np.nanmean(u_inter**2 + v_inter**2 + w_inter**2, axis=(1,2))
         return tke
 
     def cal_enstrophy(self, t, func_config):
@@ -50,6 +43,8 @@ class newVVMtools(VVMTools):
     def cal_wpthpbar(self, t, func_config):
         w  = np.squeeze(self.get_var('w',   t, drange, numpy=True, domain_range=func_config["domain_range"]) )
         th = np.squeeze(self.get_var('th',  t, drange, numpy=True, domain_range=func_config["domain_range"]) )
+        w[1:, :, :] = (w[1:, :, :] + w[:-1, :, :]) / 2
+        w[0, :, :] = 0.0
         w_bar    = np.nanmean(w,  axis=(1,2), keep_dims=True)
         th_bar   = np.nanmean(th, axis=(1,2), keep_dims=True)
         output = np.nanmean((w - w_bar) * (th - th_bar), axis=(1,2))
