@@ -10,7 +10,7 @@ exp = 'op_1'
 path = f'{config.vvmPath}/{exp}/'
 figpath = f'./fig/'
 reg  = 'all'
-lev_str = '300m'
+lev_str = '20m'
 
 data = np.load(f'{config.datPath}/xt_hov_{exp}_{reg}_{lev_str}.npz')
 data_dims = {'x':data['x'],\
