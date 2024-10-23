@@ -90,6 +90,14 @@ class newVVMtools(VVMTools):
         else:
             return np.nan
 
+    def cal_pblh_tke(self, t, func_config):
+        tke=self.cal_TKE(t, func_config)
+        if np.max(tke)>=func_config['tke_threshold']:
+            idx=self.nz-np.where(tke[::-1]>=func_config['tke_threshold'])[0][0]
+            return self.DIM['zc'][idx]
+        else:
+            return np.nan
+
 
 if __name__=='__main__':
     exp = 'op_1'
