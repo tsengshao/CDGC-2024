@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os, sys
-
+import logging
 
 class dataPlotters:
     def __init__(self, exp, figpath, dims, units, ticks=None):
@@ -43,8 +43,8 @@ class dataPlotters:
             # define custom colormap
             pass
         else:
-           cmap = mpl.colormaps[cmap_name]
-        return cmap_name
+           cmap = mpl.pyplot.get_cmap(cmap_name)
+        return cmap
 
     def _determine_ticks_and_lim(self, ax_name, ax_lim):
         if type(ax_lim) == type(None):
@@ -53,9 +53,20 @@ class dataPlotters:
             ticks = self.DIM_TICKS[ax_name]
         else:
             # subdomain default ticks
-            nticks = 11 
-            lim    = ax_lim
+            nticks = 11
+            if ax_name=='t':
+                 if (ax_lim[0]%1==0) and (ax_lim[-1]%1==0):
+                     if (ax_lim[-1]-ax_lim[0])>6:
+                         nticks = ax_lim[-1]-ax_lim[0]+1
+                     else:
+                         nticks = (ax_lim[-1]-ax_lim[0])*2+1
+                 else:
+                     logging.error(f"Input ticks range must be integer!")
+                     sys.exit()
+
+            lim = ax_lim
             ticks  = np.linspace(lim[0], lim[-1], nticks)
+
         return  lim, ticks
 
     def draw_zt(self, data, \
