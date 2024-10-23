@@ -31,6 +31,8 @@ tke             = data['tke_tz']
 enstrophy       = data['enstrophy_tz']
 pblh_th0p5_1d   = data['pblh_th0p5_1d']
 pblh_maxgrad_1d = data['pblh_maxgrad_1d']
+pblh_ens_1d     = data['pblh_ens']
+pblh_tke_1d     = data['pblh_tke']
 tr01            = data['tr01_tz']
 tr02            = data['tr02_tz']
 tr03            = data['tr03_tz']
@@ -39,8 +41,10 @@ dplot = dataPlotters(exp, figpath, data_dims, data_dim_units, tick_dims)
 fig, ax = dplot.draw_zt(data = tr01/np.max(tr01), \
                       levels = np.arange(0,1.1,0.1), \
                       extend = 'max', \
-                      pblh_dicts={'th0p5': pblh_th0p5_1d,\
-                                  'maxgrad': pblh_maxgrad_1d,\
+                      pblh_dicts={'th0p5':     pblh_th0p5_1d,\
+                                  'maxgrad':   pblh_maxgrad_1d,\
+                                  'ens(1e-5)': pblh_ens_1d,\
+                                  'tke(0.1)':  pblh_tke_1d,\
                                  },\
                       title_left  = 'tr01 [normalize by maximum]', \
                       title_right = f'{reg}', \
