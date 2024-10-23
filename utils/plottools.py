@@ -5,18 +5,21 @@ import os, sys
 
 
 class dataPlotters:
-    def __init__(self, exp, figpath, dims, ticks):
-        self.exp = exp
-        self.figpath = figpath
-        self.x       = dims['x']
-        self.y       = dims['y']
-        self.z       = dims['z']
-        self.t       = dims['t']
-        self.x_ticks  = ticks['x']
-        self.y_ticks  = ticks['y']
-        self.z_ticks  = ticks['z']
-        self.t_ticks  = ticks['t']
-        self._check_create_figpath()
+    def __init__(self, exp, figpath, dims, units, ticks=None):
+        self.EXP       = exp
+        self.FIGPATH   = figpath
+        self.DIMS      = dims
+        self.DIM_UNITS = units
+        self.DIM_TICKS = ticks or self._default_dim_ticks()
+
+    def _default_dim_ticks(self, nticks=11):
+        dim_ticks = {}
+        for key, value in self.dims.items():
+            dim_ticks[key] = np.linspace(self.dims[key].min(), \
+                                         self.dims[key].max(), \
+                                         nticks,\
+                                        )
+        return dim_ticks
 
     def _check_create_figpath(self):
         if not os.path.isdir(self.figpath):
@@ -37,10 +40,23 @@ class dataPlotters:
 
     def _get_cmap(self, cmap_name='jet'):
         if cmap_name=='':
+            # define custom colormap
             pass
         else:
            cmap = mpl.colormaps[cmap_name]
         return cmap_name
+
+    def _determine_ticks_and_lim(self, ax_name, ax_lim):
+        if type(ax_lim) == type(None):
+            # use the ticks and limit in class setting
+            lim   = (self.DIMS[ax_name].min(), self.DIMS[ax_name].max())
+            ticks = self.DIM_TICKS[ax_name]
+        else:
+            # subdomain default ticks
+            nticks = 11 
+            lim    = ax_lim
+            ticks  = np.linspace(lim[0], lim[-1], nticks)
+        return  lim, ticks
 
     def draw_zt(self, data, \
                       levels, \
@@ -48,37 +64,36 @@ class dataPlotters:
                       pblh_dicts={},\
                       title_left = '', \
                       title_right = '', \
-                      xlim=None,\
-                      ylim=None,\
-                      savefig=True,\
-                      figname=None,\
+                      xlim = None, \
+                      ylim = None,\
+                      figname='',\
                ):
-        if type(xlim) == type(None): 
-            xlim = (self.t.min(), self.t.max())
-        if type(ylim) == type(None):
-            ylim = (self.z.min(), self.z.max())
-        if type(figname) == type(None) and savfig:
-            figname = 'test.png'
+        xlim, xticks = self._determine_ticks_and_lim(ax_name='t', ax_lim=xlim)
+        ylim, yticks = self._determine_ticks_and_lim(ax_name='z', ax_lim=ylim)
+
         fig, ax, cax = self._create_figure(figsize=(10,6))
         plt.sca(ax)
         cmap = self._get_cmap('Reds')
         norm = mpl.colors.BoundaryNorm(boundaries=levels, \
                   ncolors=256, extend=extend)
-        PO = plt.pcolormesh(self.t, self.z, data, \
+        PO = plt.pcolormesh(self.DIMS['t'], self.DIMS['z'], data, \
                        cmap=cmap, norm=norm, \
                       )
         plt.colorbar(PO, cax=cax)
         if (len(pblh_dicts) > 0):
             for key, value in pblh_dicts.items():
-                plt.plot(self.t, value, label=key, zorder=10)
+                plt.plot(self.DIMS['t'], value, label=key, zorder=10)
             plt.legend()
-        plt.xticks(self.t_ticks)
-        plt.yticks(self.z_ticks)
+        plt.xticks(xticks)
+        plt.yticks(yticks)
         plt.xlim(xlim)
         plt.ylim(ylim)
+        plt.xlabel(f'time [{self.DIM_UNITS["t"]}]')
+        plt.ylabel(f'z [{self.DIM_UNITS["z"]}]')
         plt.grid()
-        plt.title(f'{title_right}\n{self.exp}', loc='right', fontsize=15)
+        plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if savefig: plt.savefig(f'{self.figpath}/{figname}', dpi=200)
+        if len(figname)==0:
+            plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
