@@ -82,6 +82,14 @@ class newVVMtools(VVMTools):
         max_idx = np.nanargmax(del_th,axis=0)
         return self.DIM['zc'][max_idx]
 
+    def cal_pblh_ens(self, t, func_config):
+        ens=self.cal_enstrophy(t, func_config)
+        if np.max(ens)>=func_config['ens_threshold']:
+            idx=self.nz-np.where(ens[::-1]>=func_config['ens_threshold'])[0][0]
+            return self.DIM['zc'][idx]
+        else:
+            return np.nan
+
 
 if __name__=='__main__':
     exp = 'op_1'
