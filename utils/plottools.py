@@ -105,7 +105,10 @@ class dataPlotters:
                       )
         plt.colorbar(PO, cax=cax)
         plt.xticks(xticks)
-        plt.yticks(yticks)
+        #ignore xticks call and set x-axis as a time axis
+        #plt.yticks(yticks)
+        ax.yaxis.set_major_locator(self.TIME_MAPPER[self.DIM_UNITS['t']][0])
+        ax.yaxis.set_major_formatter(mpl.dates.DateFormatter(self.TIME_MAPPER[self.DIM_UNITS['t']][1]))
         plt.xlim(xlim)
         plt.ylim(ylim)
         plt.ylabel(f'time [{self.DIM_UNITS["t"]}]')
@@ -113,7 +116,7 @@ class dataPlotters:
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if len(figname)==0:
+        if len(figname)>0:
             plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
@@ -155,7 +158,7 @@ class dataPlotters:
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if len(figname)!=0:
+        if len(figname)>0:
             plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
