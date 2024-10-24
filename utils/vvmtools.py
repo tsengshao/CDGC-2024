@@ -82,6 +82,26 @@ class newVVMtools(VVMTools):
         max_idx = np.nanargmax(del_th,axis=0)
         return self.DIM['zc'][max_idx]
 
+    # pblh is defined as the enstrophy decreasing below certain threshold over the upper boundary layer. 
+    # set the threshold of enstrophy in func_config as 'threshold' variable. 
+    def cal_pblh_ens(self, t, func_config):
+        ens=self.cal_enstrophy(t, func_config)
+        if np.max(ens)>=func_config['threshold']:
+            idx=self.nz-np.where(ens[::-1]>=func_config['threshold'])[0][0]
+            return self.DIM['zc'][idx]
+        else:
+            return np.nan
+
+    # pblh is defined as the tke decreasing below certain threshold over the upper boundary layer. 
+    # set the threshold of tke in func_config as 'threshold' variable. 
+    def cal_pblh_tke(self, t, func_config):
+        tke=self.cal_TKE(t, func_config)
+        if np.max(tke)>=func_config['threshold']:
+            idx=self.nz-np.where(tke[::-1]>=func_config['threshold'])[0][0]
+            return self.DIM['zc'][idx]
+        else:
+            return np.nan
+
 
 if __name__=='__main__':
     exp = 'op_1'
