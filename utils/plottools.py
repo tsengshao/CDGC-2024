@@ -34,8 +34,12 @@ class dataPlotters:
     def _create_figure(self, figsize):
         self._default_setting()
         fig     = plt.figure(figsize=figsize)
-        ax      = fig.add_axes([0.1,0.1,0.8,0.8])
-        cax     = fig.add_axes([0.92,0.1,0.02,0.8])
+        if figsize[0] / figsize[1] >= 1:
+            ax      = fig.add_axes([0.1,0.1,0.8,0.8])
+            cax     = fig.add_axes([0.92,0.1,0.02,0.8])
+        else:
+            ax      = fig.add_axes([0.1,  0.1, 0.75, 0.8])
+            cax     = fig.add_axes([0.88, 0.1, 0.05, 0.8])
         return fig, ax, cax
 
     def _get_cmap(self, cmap_name='jet'):
@@ -68,6 +72,41 @@ class dataPlotters:
             ticks  = np.linspace(lim[0], lim[-1], nticks)
 
         return  lim, ticks
+
+    def draw_xt(self, data, \
+                      levels, \
+                      extend, \
+                      x_axis_dim = 'x',\
+                      title_left = '', \
+                      title_right = '', \
+                      xlim = None, \
+                      ylim = None,\
+                      figname='',\
+               ):
+        xlim, xticks = self._determine_ticks_and_lim(ax_name=x_axis_dim, ax_lim=xlim)
+        ylim, yticks = self._determine_ticks_and_lim(ax_name='t', ax_lim=ylim)
+
+        fig, ax, cax = self._create_figure(figsize=(7,10))
+        plt.sca(ax)
+        cmap = self._get_cmap('Blues')
+        norm = mpl.colors.BoundaryNorm(boundaries=levels, \
+                  ncolors=256, extend=extend)
+        PO = plt.pcolormesh(self.DIMS[x_axis_dim], self.DIMS['t'], data, \
+                       cmap=cmap, norm=norm, \
+                      )
+        plt.colorbar(PO, cax=cax)
+        plt.xticks(xticks)
+        plt.yticks(yticks)
+        plt.xlim(xlim)
+        plt.ylim(ylim)
+        plt.ylabel(f'time [{self.DIM_UNITS["t"]}]')
+        plt.xlabel(f'{x_axis_dim} [{self.DIM_UNITS[x_axis_dim]}]')
+        plt.grid()
+        plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
+        plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
+        if len(figname)==0:
+            plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
+        return fig, ax
 
     def draw_zt(self, data, \
                       levels, \
