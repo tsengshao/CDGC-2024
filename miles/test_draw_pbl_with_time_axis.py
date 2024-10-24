@@ -32,14 +32,14 @@ if __name__=='__main__':
     pblh_ens = vvm.func_time_parallel(\
                func       = vvm.cal_pblh_ens, \
                time_steps = np.arange(vvm.nt), \
-               func_config = {'domain_range':drange, 'ens_threshold':1.e-5},\
+               func_config = {'domain_range':drange, 'threshold':1.e-5},\
                cores = 5,\
               )
     print(pblh_ens.shape)
     pblh_tke = vvm.func_time_parallel(\
                func       = vvm.cal_pblh_tke, \
                time_steps = np.arange(vvm.nt), \
-               func_config = {'domain_range':drange, 'tke_threshold':0.1},\
+               func_config = {'domain_range':drange, 'threshold':0.1},\
                cores = 5,\
               )
     pblh_th0p5 = vvm.func_time_parallel(\
@@ -55,11 +55,11 @@ if __name__=='__main__':
                  cores = 5,\
               )
     '''
-    pblh_ens=np.load('./data/pblh_ens.npy')
-    pblh_tke=np.load('./data/pblh_tke.npy')
-    pblh_maxgrad=np.load('./data/pblh_maxgrad.npy')
+    pblh_ens=np.load('./data/pblh_ens.npy')/1.e3
+    pblh_tke=np.load('./data/pblh_tke.npy')/1.e3
+    pblh_maxgrad=np.load('./data/pblh_maxgrad.npy')/1.e3
+    pblh_th0p5=np.load('./data/pblh_th0p5.npy')/1.e3
     ens=np.load('./data/ens.npy')
-    pblh_th0p5=np.load('./data/pblh_th0p5.npy')
     data_dims = {'x':vvm.DIM['xc']/1e3,\
                  'y':vvm.DIM['yc']/1e3,\
                  'z':vvm.DIM['zc']/1e3,\
@@ -78,6 +78,24 @@ if __name__=='__main__':
                      }
 
     dplot = dataPlotters(exp, figpath, data_dims, data_dim_units, tick_dims)
+    #plot 1: entire time span
+    fig, ax = dplot.draw_zt(data = ens, \
+                          levels = np.linspace(0,1e-4,21), \
+                          extend = 'max', \
+                          pblh_dicts={'th0p5': pblh_th0p5,\
+                                      'maxgrad': pblh_maxgrad,\
+                                      'enstrophy': pblh_ens,\
+                                      'TKE': pblh_tke,\
+                                     },\
+                          title_left  = 'tr01 [normalize by maximum]', \
+                          title_right = f'{reg}', \
+                          #xlim        = (np.datetime64('2024-01-01 06:00:00'),\
+                          #               np.datetime64('2024-01-01 18:00:00')),\
+                          #ylim        = (0, 2),\
+                          figname     = 'entire_time_span.png',\
+                   )
+    #plot 2: daytime
+    plt.close()
     fig, ax = dplot.draw_zt(data = ens, \
                           levels = np.linspace(0,1e-4,21), \
                           extend = 'max', \
@@ -91,7 +109,27 @@ if __name__=='__main__':
                           xlim        = (np.datetime64('2024-01-01 06:00:00'),\
                                          np.datetime64('2024-01-01 18:00:00')),\
                           #ylim        = (0, 2),\
-                          figname     = 'tr01.png',\
+                          figname     = 'daytime.png',\
                    )
-    plt.show()
+    #plot 3: noon with minute ticks
+    dplot.DIM_UNITS['t'] = 'minute'
+    dplot.DIM_TICKS['t'] = 10
+    dplot.update_time_mapper()
+    plt.close()
+    fig, ax = dplot.draw_zt(data = ens, \
+                          levels = np.linspace(0,1e-4,21), \
+                          extend = 'max', \
+                          pblh_dicts={'th0p5': pblh_th0p5,\
+                                      'maxgrad': pblh_maxgrad,\
+                                      'enstrophy': pblh_ens,\
+                                      'TKE': pblh_tke,\
+                                     },\
+                          title_left  = 'tr01 [normalize by maximum]', \
+                          title_right = f'{reg}', \
+                          xlim        = (np.datetime64('2024-01-01 11:00:00'),\
+                                         np.datetime64('2024-01-01 13:00:00')),\
+                          #ylim        = (0, 2),\
+                          figname     = 'noon.png',\
+                   )
+
 

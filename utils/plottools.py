@@ -12,11 +12,12 @@ class dataPlotters:
         self.DIM_UNITS = units
         self.DIM_TICKS = ticks or self._default_dim_ticks()
         if 't' in self.DIMS.keys():
-            self.TIME_MAPPER={'hour':[mpl.dates.HourLocator(interval=self.DIM_TICKS['t']),\
-                                      '%H'],
-                              'minute':[mpl.dates.MinuteLocator(interval=self.DIM_TICKS['t']),\
-                                        '%M'],\
-                             }
+            self.update_time_mapper()
+
+    def update_time_mapper(self):
+        self.TIME_MAPPER={'hour':[mpl.dates.HourLocator(interval=self.DIM_TICKS['t']),'%H'],\
+                          'minute':[mpl.dates.MinuteLocator(interval=self.DIM_TICKS['t']),'%H\n%M'],\
+                          }
 
     def _default_dim_ticks(self, nticks=11):
         dim_ticks = {}
@@ -154,7 +155,7 @@ class dataPlotters:
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if len(figname)==0:
+        if len(figname)!=0:
             plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
