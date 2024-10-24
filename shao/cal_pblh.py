@@ -36,13 +36,13 @@ args = {\
 
 pblh_ens = newVVMTol.func_time_parallel(\
            func        = newVVMTol.cal_pblh_ens, \
-           func_config = {'domain_range':drange, 'ens_threshold':1.e-5},\
+           func_config = {'domain_range':drange, 'threshold':1.e-5},\
            **args\
            )
 
 pblh_tke = newVVMTol.func_time_parallel(\
            func        = newVVMTol.cal_pblh_tke, \
-           func_config ={'domain_range':drange, 'tke_threshold':0.1},\
+           func_config ={'domain_range':drange, 'threshold':0.1},\
            **args\
            )
 
