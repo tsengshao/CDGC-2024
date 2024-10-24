@@ -15,7 +15,7 @@ if __name__=='__main__':
     pblh_ens = vvm.func_time_parallel(\
                func       = vvm.cal_pblh_ens, \
                time_steps = np.arange(360), \
-               func_config = {'domain_range':drange, 'ens_threshold':1.e-5},\
+               func_config = {'domain_range':drange, 'threshold':1.e-5},\
                cores = 5,\
               )
 
