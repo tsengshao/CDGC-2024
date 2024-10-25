@@ -10,9 +10,10 @@ class dataPlotters:
         self.FIGPATH   = figpath
         self.DIMS      = dims
         self.DIM_UNITS = units
+        self.TIME_FMT  = '%H'
         self.DIM_TICKS = ticks or self._default_dim_ticks()
 
-    def _default_dim_ticks(self, nticks=11):
+    def _default_dim_ticks(self):
         dim_ticks = {}
         for key, value in self.dims.items():
             _, dim_ticks[key]  = self._determine_ticks_and_lim(ax_name=key, ax_lim=value)
@@ -54,19 +55,18 @@ class dataPlotters:
             ticks = self.DIM_TICKS[ax_name]
         else:
             # subdomain default ticks
-            nticks = 11
-            if ax_name=='t':
-                 if (ax_lim[0]%1==0) and (ax_lim[-1]%1==0):
-                     if (ax_lim[-1]-ax_lim[0])>6:
-                         nticks = ax_lim[-1]-ax_lim[0]+1
-                     else:
-                         nticks = (ax_lim[-1]-ax_lim[0])*2+1
-                 else:
-                     logging.error(f"Input ticks range must be integer!")
-                     sys.exit()
-
             lim = ax_lim
-            ticks  = np.linspace(lim[0], lim[-1], nticks)
+            nticks = 11
+            if ax_name!='t':
+                interval = (ax_lim[1] - ax_lim[0])/ (nticks - 1)
+                ticks = np.arange(ax_lim[0], ax_lim[1]+1, interval)
+            else:
+                #align with hourly location
+                self.TIME_FMT='%H'
+                left=ax_lim[0].astype('datetime64[h]')-np.timedelta64(1,'h')
+                right=ax_lim[1].astype('datetime64[h]')+np.timedelta64(1,'h')
+                interval=(ax_lim[1] - ax_lim[0])/ (nticks - 1)
+                ticks=np.arange(left,right,interval.astype('timedelta64[h]'))
 
         return  lim, ticks
 
@@ -94,6 +94,7 @@ class dataPlotters:
         plt.colorbar(PO, cax=cax)
         plt.xticks(xticks)
         plt.yticks(yticks)
+        ax.yaxis.set_major_formatter(mpl.dates.DateFormatter(self.TIME_FMT))
         plt.xlim(xlim)
         plt.ylim(ylim)
         plt.ylabel(f'time [{self.DIM_UNITS["t"]}]')
@@ -101,7 +102,7 @@ class dataPlotters:
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if len(figname)==0:
+        if len(figname)>0:
             plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
@@ -132,6 +133,7 @@ class dataPlotters:
                 plt.plot(self.DIMS['t'], value, label=key, zorder=10)
             plt.legend()
         plt.xticks(xticks)
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter(self.TIME_FMT))
         plt.yticks(yticks)
         plt.xlim(xlim)
         plt.ylim(ylim)
@@ -140,7 +142,7 @@ class dataPlotters:
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
-        if len(figname)==0:
+        if len(figname)>0:
             plt.savefig(f'{self.FIGPATH}/{figname}', dpi=200)
         return fig, ax
 
