@@ -15,10 +15,7 @@ class dataPlotters:
     def _default_dim_ticks(self, nticks=11):
         dim_ticks = {}
         for key, value in self.dims.items():
-            dim_ticks[key] = np.linspace(self.dims[key].min(), \
-                                         self.dims[key].max(), \
-                                         nticks,\
-                                        )
+            _, dim_ticks[key]  = self._determine_ticks_and_lim(ax_name=key, ax_lim=value)
         return dim_ticks
 
     def _check_create_figpath(self):
