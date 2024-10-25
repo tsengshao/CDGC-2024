@@ -16,17 +16,17 @@ data = np.load(f'{config.datPath}/xt_hov_{exp}_{reg}_{lev_str}.npz')
 data_dims = {'x':data['x'],\
              'y':data['y'],\
              'z':data['z'],\
-             't':data['t'],\
+             't':np.arange(721)*np.timedelta64(2,'m')+np.datetime64('2024-01-01 05:00:00'),\
             }
-tick_dims = {'x':np.linspace(data['x'][0], data['x'][-1], 5),\
+tick_dims = {'x':np.arange(data['x'][0], data['x'][-1]+0.0001, 6.4),\
              'y':np.arange(data['x'][0], data['y'][-1]+0.0001, 6.4),\
              'z':np.arange(0, data['z'].max()+0.00001,0.2),\
-             't':np.append([5],np.arange(6, data['t'].max()+1,3)),\
+             't':[np.datetime64(f'2024-01-01 00:00')+np.timedelta64(i,'h') for i in [5,6,12,18,24]],\
             }
 data_dim_units = {'x':'km',\
                   'y':'km',\
                   'z':'km',\
-                  't':'hr',\
+                  't':'LT',\
                  }
 
 tr01            = data['tr01_xt']
@@ -37,7 +37,7 @@ no2             = data['no2']
 no3             = data['no3']
 o3              = data['o3']
 
-dplotter = dataPlotters(exp, figpath, data_dims, data_dim_units, tick_dims)
+dplotter = dataPlotters(exp, figpath, data_dims, data_dim_units)
 
 var        = tr03.copy()
 vname      = 'tr03'

@@ -5,18 +5,19 @@ import os, sys
 import logging
 
 class dataPlotters:
-    def __init__(self, exp, figpath, dims, units, ticks=None):
+    def __init__(self, exp, figpath, domain, units, ticks=None, time_fmt='%H'):
         self.EXP       = exp
         self.FIGPATH   = figpath
-        self.DIMS      = dims
-        self.DIM_UNITS = units
-        self.TIME_FMT  = '%H'
-        self.DIM_TICKS = ticks or self._default_dim_ticks()
+        self.DOMAIN      = domain
+        self.DOMAIN_UNITS = units
+        self.CUSTOM_TIME_FMT  = time_fmt
+        self.DOMAIN_TICKS = ticks or self._default_dim_ticks()
 
     def _default_dim_ticks(self):
         dim_ticks = {}
-        for key, value in self.dims.items():
-            _, dim_ticks[key]  = self._determine_ticks_and_lim(ax_name=key, ax_lim=value)
+        for key, value in self.DOMAIN.items():
+            #_, dim_ticks[key]  = self._determine_ticks_and_lim(ax_name=key, ax_lim=None)
+            dim_ticks[key]  = self._get_clear_ticks( ax_name = key )
         return dim_ticks
 
     def _check_create_figpath(self):
@@ -48,25 +49,49 @@ class dataPlotters:
            cmap = mpl.pyplot.get_cmap(cmap_name)
         return cmap
 
+    def _get_clear_ticks(self, ax_name, ax_lim=None):
+        # subdomain default ticks
+        lim = ax_lim or (self.DOMAIN[ax_name].min(), self.DOMAIN[ax_name].max())
+        nticks = 11
+        if ax_name=='t':
+            #align with hourly location
+            length=(lim[1] - lim[0])
+
+            if length  // np.timedelta64(1,'D') > 1:
+              self.TIME_FMT = '%D'
+              delta = np.timedelta64(1,'D') 
+              left = (lim[0]-np.timedelta64(1,'s')).astype('datetime64[D]')
+            elif length  // np.timedelta64(1,'h') > 1:
+              self.TIME_FMT = '%H'
+              delta = np.timedelta64(1,'h') 
+              left = (lim[0]-np.timedelta64(1,'s')).astype('datetime64[h]')
+            else :
+              self.TIME_FMT = '%H:%M'
+              delta = np.timedelta64(10,'m')
+              mn = int(lim[0].astype(str)[11:19].split(':')[-1])
+              left = (lim[0] - np.timedelta64(mn%10,'m'))
+            
+            ticks=np.arange(left,left+length+delta*2, delta)
+        elif ax_name=='z':
+            length = (lim[1]-lim[0])
+            interval = length / (nticks - 1)
+            if interval >= 1e-3:
+              interval = np.round(interval,2)
+            ticks = np.arange(lim[0],lim[1]+interval,interval)
+        else:
+            ticks = np.linspace(lim[0], lim[1], nticks)
+        return ticks
+ 
+
     def _determine_ticks_and_lim(self, ax_name, ax_lim):
         if type(ax_lim) == type(None):
             # use the ticks and limit in class setting
-            lim   = (self.DIMS[ax_name].min(), self.DIMS[ax_name].max())
-            ticks = self.DIM_TICKS[ax_name]
+            self.TIME_FMT = self.CUSTOM_TIME_FMT
+            lim   = (self.DOMAIN[ax_name].min(), self.DOMAIN[ax_name].max())
+            ticks = self.DOMAIN_TICKS[ax_name]
         else:
-            # subdomain default ticks
-            lim = ax_lim
-            nticks = 11
-            if ax_name!='t':
-                interval = (ax_lim[1] - ax_lim[0])/ (nticks - 1)
-                ticks = np.arange(ax_lim[0], ax_lim[1]+1, interval)
-            else:
-                #align with hourly location
-                self.TIME_FMT='%H'
-                left=ax_lim[0].astype('datetime64[h]')-np.timedelta64(1,'h')
-                right=ax_lim[1].astype('datetime64[h]')+np.timedelta64(1,'h')
-                interval=(ax_lim[1] - ax_lim[0])/ (nticks - 1)
-                ticks=np.arange(left,right,interval.astype('timedelta64[h]'))
+            lim   = ax_lim
+            ticks = self._get_clear_ticks(ax_name, ax_lim)
 
         return  lim, ticks
 
@@ -88,7 +113,7 @@ class dataPlotters:
         cmap = self._get_cmap('Blues')
         norm = mpl.colors.BoundaryNorm(boundaries=levels, \
                   ncolors=256, extend=extend)
-        PO = plt.pcolormesh(self.DIMS[x_axis_dim], self.DIMS['t'], data, \
+        PO = plt.pcolormesh(self.DOMAIN[x_axis_dim], self.DOMAIN['t'], data, \
                        cmap=cmap, norm=norm, \
                       )
         plt.colorbar(PO, cax=cax)
@@ -97,8 +122,8 @@ class dataPlotters:
         ax.yaxis.set_major_formatter(mpl.dates.DateFormatter(self.TIME_FMT))
         plt.xlim(xlim)
         plt.ylim(ylim)
-        plt.ylabel(f'time [{self.DIM_UNITS["t"]}]')
-        plt.xlabel(f'{x_axis_dim} [{self.DIM_UNITS[x_axis_dim]}]')
+        plt.ylabel(f'time [{self.DOMAIN_UNITS["t"]}]')
+        plt.xlabel(f'{x_axis_dim} [{self.DOMAIN_UNITS[x_axis_dim]}]')
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
@@ -124,21 +149,21 @@ class dataPlotters:
         cmap = self._get_cmap('Reds')
         norm = mpl.colors.BoundaryNorm(boundaries=levels, \
                   ncolors=256, extend=extend)
-        PO = plt.pcolormesh(self.DIMS['t'], self.DIMS['z'], data, \
+        PO = plt.pcolormesh(self.DOMAIN['t'], self.DOMAIN['z'], data, \
                        cmap=cmap, norm=norm, \
                       )
         plt.colorbar(PO, cax=cax)
         if (len(pblh_dicts) > 0):
             for key, value in pblh_dicts.items():
-                plt.plot(self.DIMS['t'], value, label=key, zorder=10)
+                plt.plot(self.DOMAIN['t'], value, label=key, zorder=10)
             plt.legend()
         plt.xticks(xticks)
         ax.xaxis.set_major_formatter(mpl.dates.DateFormatter(self.TIME_FMT))
         plt.yticks(yticks)
         plt.xlim(xlim)
         plt.ylim(ylim)
-        plt.xlabel(f'time [{self.DIM_UNITS["t"]}]')
-        plt.ylabel(f'z [{self.DIM_UNITS["z"]}]')
+        plt.xlabel(f'time [{self.DOMAIN_UNITS["t"]}]')
+        plt.ylabel(f'z [{self.DOMAIN_UNITS["z"]}]')
         plt.grid()
         plt.title(f'{title_right}\n{self.EXP}', loc='right', fontsize=15)
         plt.title(f'{title_left}', loc='left', fontsize=20, fontweight='bold')
