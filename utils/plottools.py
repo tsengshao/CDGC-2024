@@ -6,12 +6,14 @@ import logging
 
 class dataPlotters:
     def __init__(self, exp, figpath, domain, units, ticks=None, time_fmt='%H'):
-        self.EXP       = exp
-        self.FIGPATH   = figpath
-        self.DOMAIN      = domain
-        self.DOMAIN_UNITS = units
+        self.EXP              = exp
+        self.FIGPATH          = figpath
+        self.DOMAIN           = domain
+        self.DOMAIN_UNITS     = units
         self.CUSTOM_TIME_FMT  = time_fmt
         self.DOMAIN_TICKS = self._default_dim_ticks(ticks)
+
+        self._check_create_figpath()
 
     def _default_dim_ticks(self, ticks_in):
         ticks = ticks_in or {'x':None, 'y':None, 'z':None, 't':None}
@@ -21,7 +23,7 @@ class dataPlotters:
         return dim_ticks
 
     def _check_create_figpath(self):
-        if not os.path.isdir(self.figpath):
+        if not os.path.isdir(self.FIGPATH):
             print(f'create fig folder ... {self.FIGPATH}')
             os.system(f'mkdir -p {self.FIGPATH}')
 
