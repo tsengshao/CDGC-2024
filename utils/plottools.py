@@ -22,8 +22,8 @@ class dataPlotters:
 
     def _check_create_figpath(self):
         if not os.path.isdir(self.figpath):
-            print(f'create fig folder ... {self.figpath}')
-            os.system(f'mkdir -p {self.figpath}')
+            print(f'create fig folder ... {self.FIGPATH}')
+            os.system(f'mkdir -p {self.FIGPATH}')
 
     def _default_setting(self):
         plt.rcParams.update({'font.size':17,
