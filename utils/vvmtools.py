@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys, os
 sys.path.insert(1,'../')
-from VVMTools.vvmtools import VVMTools
+from VVMTools.vvmtools.analyze import DataRetriever
 import multiprocessing
 
-class newVVMtools(VVMTools):
+class newVVMtools(DataRetriever):
     def __init__(self, cpath):
         super().__init__(cpath)
         self.nx = len(self.DIM['xc'])
@@ -55,10 +55,31 @@ class newVVMtools(VVMTools):
                                       )
         w[1:, :, :] = (w[1:, :, :] + w[:-1, :, :]) / 2
         w[0, :, :] = 0.0
-        w_bar    = np.nanmean(w,  axis=(1,2), keep_dims=True)
-        th_bar   = np.nanmean(th, axis=(1,2), keep_dims=True)
+        w_bar    = np.nanmean(w,  axis=(1,2), keepdims=True)
+        th_bar   = np.nanmean(th, axis=(1,2), keepdims=True)
         output = np.nanmean((w - w_bar) * (th - th_bar), axis=(1,2))
         return output
+
+    def cal_pblh_wpthpbar(self, t, func_config):
+        wpthpbar = self.cal_wpthpbar(t, func_config)
+        if np.max(wpthpbar) >= func_config['threshold']:
+            idx_min = np.argmin(wpthpbar)
+            if wpthpbar[idx_min] < 0:
+                idx_n = np.where(wpthpbar[idx_min:]>-1e-5)[0][0] + idx_min
+                idx_p = np.where(wpthpbar<0)[0][0]
+            else:
+                idx_n = idx_p = 0
+            return (self.DIM['zc'][idx_n], self.DIM['zc'][idx_min], self.DIM['zc'][idx_p])
+        else:
+            return (self.DIM['zc'][0], self.DIM['zc'][0], self.DIM['zc'][0])
+
+    def cal_pblh_wpthpbar_top_p(selt, t, func_config):
+        wpthpbar=self.cal_wpthpbar(t, func_config)
+        if np.max(wpthpbar)>=func_config['threshold']:
+            idx=np.argmin(wpthpbar)[0][0]
+            return self.DIM['zc'][idx]
+        else:
+            return self.DIM['zc'][0]
 
     def cal_pblh_0p5(self,t, func_config):
         th = np.squeeze(self.get_var("th",t,\
@@ -101,6 +122,7 @@ class newVVMtools(VVMTools):
             return self.DIM['zc'][idx]
         else:
             return np.nan
+
 
 
 if __name__=='__main__':
