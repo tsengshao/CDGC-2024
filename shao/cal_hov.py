@@ -4,7 +4,7 @@ sys.path.insert(1,'../')
 from utils.vvmtools import newVVMtools
 import config
 
-exp = 'op_1'
+exp = 'pbl_op_8dth_6tr'
 path = f'{config.vvmPath}/{exp}/'
 newVVMTol = newVVMtools(path)
 nt = 721
@@ -27,27 +27,23 @@ args    = {\
            'cores':4,\
           }
 
-tr01       =  newVVMTol.get_var_parallel('tr01',  **args)
-tr02       =  newVVMTol.get_var_parallel('INERT', **args)
-tr03       =  newVVMTol.get_var_parallel('tr02',  **args)
-chem_no    =  newVVMTol.get_var_parallel('NO',    **args) 
-no2        =  newVVMTol.get_var_parallel('NO2',   **args)
-no3        =  newVVMTol.get_var_parallel('NO3',   **args)
-o3         =  newVVMTol.get_var_parallel('O3',    **args)
+data_dict = {}
+
+# calculate tracer 1 to 6
+for i in range(1,7):
+  varn = f'tr{i:02d}'
+  data_dict[f'{varn}_xt'] = newVVMTol.get_var_parallel(varn, **args)
+
+for varn in ['NO', 'NO2', 'INERT', 'O3']:
+  data_dict[f'{varn.lower()}_xt'] = newVVMTol.get_var_parallel(varn, **args)
 
 np.savez(f'{config.datPath}/xt_hov_{exp}_{reg}_{lev_str}.npz',\
          x = newVVMTol.DIM['xc']/1e3, \
          y = newVVMTol.DIM['yc']/1e3, \
          z = newVVMTol.DIM['zc']/1e3, \
          t = newVVMTol.DIM['t'], \
-         tr01_xt = tr01, \
-         tr02_xt = tr02, \
-         tr03_xt = tr03, \
-         no = chem_no, \
-         no2 = no2, \
-         no3 = no3, \
-         o3  = o3, \
          target_lev = lev_str,\
+         **data_dict\
         )
 
 

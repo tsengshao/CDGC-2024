@@ -6,17 +6,19 @@ from utils.plottools import dataPlotters
 import config
 import matplotlib.pyplot as plt
 
-exp = 'op_1'
+exp = 'pbl_op_8dth_6tr'
 path = f'{config.vvmPath}/{exp}/'
 figpath = f'./fig/'
 reg  = 'all'
-lev_str = '20m'
+lev_str = '40m'
+lev_name = 'nearSuf.'
+nt = 721
 
 data = np.load(f'{config.datPath}/xt_hov_{exp}_{reg}_{lev_str}.npz')
 data_dims = {'x':data['x'],\
              'y':data['y'],\
              'z':data['z'],\
-             't':np.arange(721)*np.timedelta64(2,'m')+np.datetime64('2024-01-01 05:00:00'),\
+             't':np.arange(nt)*np.timedelta64(2,'m')+np.datetime64('2024-01-01 05:00:00'),\
             }
 tick_dims = {'x':np.arange(data['x'][0], data['x'][-1]+0.0001, 6.4),\
              'y':np.arange(data['x'][0], data['y'][-1]+0.0001, 6.4),\
@@ -29,28 +31,20 @@ data_dim_units = {'x':'km',\
                   't':'LT',\
                  }
 
-tr01            = data['tr01_xt']
-tr02            = data['tr02_xt']
-tr03            = data['tr03_xt']
-cNO              = data['no']
-no2             = data['no2']
-no3             = data['no3']
-o3              = data['o3']
-
+# var example : tr01_xt, no_xt, no2_xt ...
 dplotter = dataPlotters(exp, figpath, data_dims, data_dim_units)
 
-var        = tr03.copy()
-vname      = 'tr03'
-draw_data  = np.where(var>0, var, np.nan)/np.max(var)
-fig, ax = dplotter.draw_xt(data = draw_data,\
-                  levels = np.arange(0, 0.6, 0.1), \
+vname      = 'NOx'
+var        = data[f'no_xt'] + data['no2_xt']
+draw_data  = var.copy()
+fig, ax, cax = dplotter.draw_xt(data = draw_data,\
+                  levels = np.arange(0, 30.001,2),
                   extend = 'max', \
+                  cmap_name   = 'OrRd', \
                   x_axis_dim = 'x',\
-                  title_left  = f'{vname} [norm]', \
-                  title_right = f'{reg} / @{lev_str} / y-mean', \
-                  xlim = None, \
-                  ylim = None,\
-                  figname     = 'hov_tr01.png',\
+                  title_left  = f'{vname} (ppb)', \
+                  title_right = f'{reg} / @{lev_name} / y-mean', \
+                  figname     = f'hov_{vname}.png',\
            )
 
 plt.show()
