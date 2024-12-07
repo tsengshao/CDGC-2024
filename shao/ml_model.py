@@ -225,6 +225,7 @@ if __name__=='__main__':
 
         tot_loss /= len(train_loader.dataset)
 
+        model.eval()
         test_loss = 0
         # testing loss
         for test_x1, test_y1 in test_loader:
@@ -250,9 +251,11 @@ if __name__=='__main__':
 
     # Plot training and testing loss
     plt.plot(train_losses, label='Training Loss')
-    #plt.plot(test_losses, label='Testing Loss')
+    plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    plt.ylim(0,10**-4)
+    plt.xlim(0,6000)
     plt.legend()
     plt.title('Loss')
     plt.savefig('./fig/loss.png',dpi=200)
