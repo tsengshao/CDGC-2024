@@ -183,7 +183,7 @@ if __name__=='__main__':
 
     # Hyperparameters
     learning_rate = 0.00005
-    epochs = 6000
+    epochs = 12000
     batch_size = 32
     in_channels = 1
 
@@ -225,13 +225,13 @@ if __name__=='__main__':
 
         tot_loss /= len(train_loader.dataset)
 
-        model.eval()
+        vcnn.eval()
         test_loss = 0
         # testing loss
         for test_x1, test_y1 in test_loader:
             batch_x1, batch_y1 = test_x1.to(device, dtype=torch.float), test_y1.to(device, dtype=torch.float)
             pred=vcnn(batch_x1)
-            test_loss += loss_fn(pred, batch_y1)
+            test_loss += loss_fn(pred*weight, batch_y1*weight)
         test_loss /= len(test_loader.dataset)
 
 
@@ -254,8 +254,8 @@ if __name__=='__main__':
     plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.ylim(0,10**-4)
-    plt.xlim(0,6000)
+    plt.ylim(0,np.max(np.concatenate((train_losses[10:],test_losses[10:]))))
+    plt.xlim(0,epochs)
     plt.legend()
     plt.title('Loss')
     plt.savefig('./fig/loss.png',dpi=200)
