@@ -108,7 +108,7 @@ class newVVMtools(DataRetriever):
     def cal_pblh_ens(self, t, func_config):
         ens=self.cal_enstrophy(t, func_config)
         if np.max(ens)>=func_config['threshold']:
-            idx=self.nz-np.where(ens[::-1]>=func_config['threshold'])[0][0]
+            idx=self.nz-np.where(ens[::-1]>=func_config['threshold'])[0][0] - 1
             return self.DIM['zc'][idx]
         else:
             return np.nan
@@ -118,7 +118,7 @@ class newVVMtools(DataRetriever):
     def cal_pblh_tke(self, t, func_config):
         tke=self.cal_TKE(t, func_config)
         if np.max(tke)>=func_config['threshold']:
-            idx=self.nz-np.where(tke[::-1]>=func_config['threshold'])[0][0]
+            idx=self.nz-np.where(tke[::-1]>=func_config['threshold'])[0][0] - 1
             return self.DIM['zc'][idx]
         else:
             return np.nan
