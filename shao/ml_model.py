@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os, sys
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import pickle
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -183,7 +183,7 @@ if __name__=='__main__':
 
     # Hyperparameters
     learning_rate = 0.00005
-    epochs = 6000
+    epochs = 12000
     batch_size = 32
     in_channels = 1
 
@@ -201,6 +201,7 @@ if __name__=='__main__':
     weight = 1+torch.linspace(1,0.1,y_data.shape[1])**2
     weight *= 10
     weight = weight[None,:].to(device, dtype=torch.float)
+    weight = 1
 
     # Training loop
     train_losses = []
@@ -225,12 +226,13 @@ if __name__=='__main__':
 
         tot_loss /= len(train_loader.dataset)
 
+        vcnn.eval()
         test_loss = 0
         # testing loss
         for test_x1, test_y1 in test_loader:
             batch_x1, batch_y1 = test_x1.to(device, dtype=torch.float), test_y1.to(device, dtype=torch.float)
             pred=vcnn(batch_x1)
-            test_loss += loss_fn(pred, batch_y1)
+            test_loss += loss_fn(pred*weight, batch_y1*weight)
         test_loss /= len(test_loader.dataset)
 
 
@@ -241,7 +243,7 @@ if __name__=='__main__':
         if min_loss > tot_loss:
             updated = True
             min_loss = tot_loss
-            torch.save(vcnn, config.datPath+'VVM-1DCNN.pkl')
+            torch.save(vcnn, config.datPath+'VVM-1DCNN_evenloss.pkl')
         print (
             '[{:>5d}/{:>5d}]'.format(epoch+1, epochs),
             'Loss:{:>.2e}, '.format(tot_loss.item()),
@@ -250,12 +252,14 @@ if __name__=='__main__':
 
     # Plot training and testing loss
     plt.plot(train_losses, label='Training Loss')
-    #plt.plot(test_losses, label='Testing Loss')
+    plt.plot(test_losses, label='Testing Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    plt.ylim(0,np.max(np.concatenate((train_losses[10:],test_losses[10:]))))
+    plt.xlim(0,epochs)
     plt.legend()
     plt.title('Loss')
-    plt.savefig('./fig/loss.png',dpi=200)
+    plt.savefig('./fig/loss_evenloss.png',dpi=200)
     plt.show(block=True)
 
     #vcnn=torch.load('VVM-1DCNN.pkl').to(device)
