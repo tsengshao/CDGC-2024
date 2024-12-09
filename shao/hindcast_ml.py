@@ -18,8 +18,10 @@ from ml_model import CNN1D
 from sklearn.preprocessing import normalize
 import sys, os
 import matplotlib as mpl
+from datetime import datetime, timedelta
 
 def fig_default_setting():
+    plt.close('all')
     plt.rcParams.update({'font.size':17,
                          'axes.linewidth':2,
                          'lines.linewidth':5})
@@ -46,6 +48,9 @@ if __name__=='__main__':
     device='cpu'
     print(device)
 
+    mlname   = 'VVM-1DCNN_evenloss'
+    figpath  = f'./fig/{mlname}/'
+    os.system(f'mkdir -p {figpath}')
     casen    = 'pbl_op_8dth_6tr'
     #casen    = 'pbl_op_11dth'
     fname = config.datPath+f'/tz_series_{casen}_all.npz'
@@ -54,7 +59,7 @@ if __name__=='__main__':
     z     = data['z']
     time  = data['t']
     
-    vcnn=torch.load(config.datPath+'/VVM-1DCNN.pkl').to(device)
+    vcnn=torch.load(config.datPath+f'/{mlname}.pkl').to(device)
     vcnn.eval()
 
     # hindcast
@@ -62,11 +67,10 @@ if __name__=='__main__':
     error_map = np.zeros((z.size, bins.size-1))
 
     itt=30 # integrate time
-    plt.close('all')
     fig0, ax0 = plt.subplots(figsize=(13,10))
     iz0 = np.argmin(np.abs(z-0.25))
     ax0.plot(time, th0[:,iz0], c='k')
-    for i0 in np.arange(0, 720-itt, 1): # hindcast start time
+    for i0 in np.arange(0, 720-itt+1, 1): # hindcast start time
         print(i0)
         result = integrate(th0[i0], vcnn, device, nt=itt)
 
@@ -83,9 +87,8 @@ if __name__=='__main__':
         iz   = np.arange(z.size, dtype=int)
         error_map[iz, ibin] += 1
 
-        if i0%30 == -1:
+        if i0%30 == 0:
             fig_default_setting()
-            plt.close()
             fig, ax = plt.subplots(figsize=(8,10))
             plt.plot(th0[i0], z, label=f'initial_{i0/30+5}', c='k')
             plt.plot(th0[i0+itt], z, label=f'+{itt/30}hr true', c='0.5')
@@ -97,11 +100,11 @@ if __name__=='__main__':
             plt.xlabel('[K]')
             plt.grid(True)
             plt.title(f'Hindcast (+{itt/30}hr)\n'+r'$/Theta$'+' profile', loc='left', fontweight='bold', fontsize=15)
-            plt.title(f'ini: {i0/30+5} LT \n{casen}', fontsize=15, loc='right')
+            plt.title(f'ini: {i0/30+5} LT \n{casen} / {mlname}', fontsize=15, loc='right')
             plt.tight_layout()
-            os.system('mkdir -p ./fig/hindcast_profile/')
-            plt.savefig(f'./fig/hindcast_profile/{i0:06d}.png',dpi=200)
-            plt.close()
+            outpath=f'{figpath}/hprofile_{itt/30:.0f}hr'
+            os.system(f'mkdir -p {outpath}')
+            plt.savefig(f'{outpath}/{i0:06d}.png',dpi=200)
 
     plt.sca(ax0)
     plt.xlim(time[0], time[-1])
@@ -109,13 +112,11 @@ if __name__=='__main__':
     plt.xlabel('time [hr]')
     plt.ylabel('Theta [K]')
     plt.title(f'Hindcast (+{itt/30}hr) Timeseries @{z[iz0]}km', weight='bold', loc='left', fontsize=20)
-    plt.title(f'{casen}', loc='right', fontsize=20)
-    plt.savefig(f'./fig/hindcast_series_{z[iz0]:.2f}.png',dpi=200)
-    plt.close()
+    plt.title(f'{casen}\n{mlname}', loc='right', fontsize=20)
+    plt.savefig(f'{figpath}/hseries_{z[iz0]:.2f}.png',dpi=200)
 
 
     x = ( bins[:-1] + bins[1:] ) /2
-    plt.close()
     fig, ax = plt.subplots(figsize=(8,10))
     levels = np.arange(0,0.500001,0.02)
     norm = mpl.colors.BoundaryNorm(boundaries=levels, \
@@ -128,26 +129,33 @@ if __name__=='__main__':
     plt.ylabel('[km]')
     plt.xlim(-0.5, 0.5)
     plt.ylim(0,2)
-    plt.title(f'Theta bias\nHindcast +{itt/30}hr compare to VVM', loc='left', fontweight='bold', fontsize=12)
+    plt.title(f'Theta bias\nHindcast +{itt/30:.0f}hr compare to VVM', loc='left', fontweight='bold', fontsize=12)
     sample = np.sum(error_map,axis=1)[0]
-    plt.title(f'sample: {sample:.0f} profiles\n{casen}', loc='right', fontsize=12)
+    plt.title(f'{casen} / {mlname}\n#{sample:.0f} profiles', loc='right', fontsize=12)
     plt.tight_layout()
-    plt.savefig(f'./fig/hindcast_bias_{itt/30:.0f}hr.png', dpi=200)
-    sys.exit()
+    plt.savefig(f'{figpath}/hbias_{itt/30:.0f}hr.png',dpi=200)
 
 
     # integrate 24 hr
     nt = 720
     result = integrate(th0[0], vcnn, device, nt=720)
-    for hr in range(24):
-        it = int(hr*30)
-        plt.plot(th0[it], z, label='vvm')
-        plt.plot(result[it], z, label='ml')
-        plt.title(f'{hr+5:.0f} LT')
+    outpath = f'{figpath}/integrate24h/'
+    os.system(f'mkdir -p {outpath}')
+    for it in range(0,721,30):
+        print(it)
+        nowdate = datetime(2024,1,1,5) + it*timedelta(minutes=2)
+        fig_default_setting()
+        fig, ax = plt.subplots(figsize=(12,10))
+        plt.plot(th0[it], z, label='vvm', c='k')
+        plt.plot(result[it], z, label='ml', c='C0')
+        plt.title(f'integrated Theta profile\nforcast: {it*2/60:.1f}LT / initial: 05LT', loc='left', fontsize=20, fontweight='bold')
+        plt.title(f'{casen}\n{mlname}', loc='right', fontsize=20)
+        plt.grid(True)
         plt.legend()
-        plt.xlim(292, 302)
-        plt.ylim(0,1)
-
-        plt.show()
+        plt.xlim(290, 310)
+        plt.ylim(0,2)
+        plt.ylabel('[km]')
+        plt.xlabel('[K]')
+        plt.savefig(f'{outpath}/{it:06d}.png', dpi=200)
 
 
