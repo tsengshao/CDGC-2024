@@ -24,7 +24,7 @@ args    = {\
            'domain_range':drange,\
            'compute_mean':True,\
            'axis':0,\
-           'cores':4,\
+           'cores':5,\
           }
 
 data_dict = {}
@@ -32,9 +32,15 @@ data_dict = {}
 # calculate tracer 1 to 6
 for i in range(1,7):
   varn = f'tr{i:02d}'
+  print(varn)
   data_dict[f'{varn}_xt'] = newVVMTol.get_var_parallel(varn, **args)
 
 for varn in ['NO', 'NO2', 'INERT', 'O3']:
+  print(varn)
+  data_dict[f'{varn.lower()}_xt'] = newVVMTol.get_var_parallel(varn, **args)
+
+for varn in ['u', 'v']:
+  print(varn)
   data_dict[f'{varn.lower()}_xt'] = newVVMTol.get_var_parallel(varn, **args)
 
 np.savez(f'{config.datPath}/xt_hov_{exp}_{reg}_{lev_str}.npz',\

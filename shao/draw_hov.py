@@ -49,3 +49,33 @@ fig, ax, cax = dplotter.draw_xt(data = draw_data,\
 
 plt.show()
 
+vname      = 'NOx_anomaly'
+var        = data[f'no_xt'] + data['no2_xt']
+var        = var - np.mean(var, axis=1, keepdims=True)
+var        = np.where(var<1, np.nan, var)
+draw_data  = var.copy()
+fig, ax, cax = dplotter.draw_xt(data = draw_data,\
+                  levels = np.arange(1,15.001,0.5),
+                  extend = 'max', \
+                  cmap_name   = 'RdYlGn_r', \
+                  x_axis_dim = 'x',\
+                  title_left  = f'{vname} (ppb)', \
+                  title_right = f'{reg} / @{lev_name} / y-mean', \
+                  figname     = f'hov_{vname}.png',\
+           )
+plt.show()
+
+vname      = 'u'
+var        = data[f'u_xt']
+draw_data  = var.copy()
+fig, ax, cax = dplotter.draw_xt(data = draw_data,\
+                  levels = np.arange(-3, 3.001,0.25),
+                  extend = 'both', \
+                  cmap_name   = 'RdBu_r', \
+                  x_axis_dim = 'x',\
+                  title_left  = f'{vname} (m/s)', \
+                  title_right = f'{reg} / @{lev_name} / y-mean', \
+                  figname     = f'hov_{vname}.png',\
+           )
+plt.show()
+
